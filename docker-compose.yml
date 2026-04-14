@@ -1,0 +1,38 @@
+services:
+  genomeprivate-web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - RYBBIT_SITE_ID=${RYBBIT_SITE_ID}
+        - RYBBIT_URL=${RYBBIT_URL}
+    image: genomeprivate-web:latest
+    container_name: genomeprivate-web
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      NEXT_TELEMETRY_DISABLED: "1"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    networks:
+      - genomeprivate-internal
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflared-genomeprivate
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
+    networks:
+      - genomeprivate-internal
+    depends_on:
+      - genomeprivate-web
+
+networks:
+  genomeprivate-internal:
+    driver: bridge

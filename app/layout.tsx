@@ -23,6 +23,14 @@ export const metadata: Metadata = {
   title: 'How private is your genome? — a six-question dossier',
   description:
     'When 23andMe sold its database for $305M, the product being sold was customers. Six questions. Thirty seconds. No email required, nothing stored.',
+  icons: {
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.ico', sizes: 'any' },
+    ],
+    apple: [{ url: '/apple-touch-icon.png', sizes: '180x180' }],
+  },
+  manifest: '/site.webmanifest',
   openGraph: {
     title: 'How private is your genome?',
     description:
@@ -30,11 +38,13 @@ export const metadata: Metadata = {
     url: 'https://genomeprivate.com',
     siteName: 'Genome Private',
     type: 'website',
+    images: [{ url: '/icon-512.png', width: 512, height: 512, alt: 'Genome Private' }],
   },
   twitter: {
-    card: 'summary_large_image',
+    card: 'summary',
     title: 'How private is your genome?',
     description: 'Six questions. Thirty seconds. No email. Cookieless analytics only.',
+    images: ['/icon-512.png'],
   },
   robots: { index: true, follow: true },
 };

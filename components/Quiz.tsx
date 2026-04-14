@@ -273,6 +273,7 @@ function Result({
       >
         <a
           href={`https://privdna.com/?utm_source=genomeprivate&utm_medium=quiz&utm_campaign=result_${persona}`}
+          onClick={() => track('quiz_cta_click')}
           className="btn-ink"
         >
           {r.cta} →

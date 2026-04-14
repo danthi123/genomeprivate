@@ -196,6 +196,11 @@ function Intro({ onBegin }: { onBegin: () => void }) {
         <span>&copy; 2026 GenomePrivate</span>
         <span>No cookies</span>
         <span>
+          <a href="/privacy" className="hover:text-ink">
+            Privacy
+          </a>
+        </span>
+        <span>
           <a
             href="mailto:contact@genomeprivate.com"
             className="hover:text-ink"

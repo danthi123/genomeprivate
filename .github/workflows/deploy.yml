@@ -1,0 +1,26 @@
+name: Deploy
+
+# Mirrors the Gitea deploy webhook on pushes landing at the GitHub mirror.
+# POSTs to /webhook/genomeprivate-deploy with the shared bearer token.
+# The n8n workflow is idempotent so duplicate triggers from both remotes
+# are at worst a single extra rebuild.
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  trigger-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: POST deploy webhook
+        env:
+          DEPLOY_TOKEN: ${{ secrets.DEPLOY_WEBHOOK_TOKEN }}
+        run: |
+          curl -fsS -X POST https://n8n.dant123.com/webhook/genomeprivate-deploy \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${DEPLOY_TOKEN}" \
+            -d "{\"ref\":\"${GITHUB_REF}\",\"after\":\"${GITHUB_SHA}\"}" \
+          | tee /tmp/response.json
+          echo

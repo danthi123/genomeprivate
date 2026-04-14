@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useCallback, CSSProperties } from 'react';
+import { useState, useCallback, useEffect, CSSProperties } from 'react';
 import { QUESTIONS, Persona } from '@/lib/questions';
 import { scoreAnswers, RESULTS } from '@/lib/scoring';
+import { track } from '@/lib/rybbit';
 
 type Phase = 'intro' | 'quiz' | 'result';
 
@@ -16,6 +17,8 @@ export default function Quiz() {
   }, []);
 
   const advance = useCallback(() => {
+    // Anonymous funnel step marker — no answer or persona data included.
+    track('quiz_progress', { step: idx + 1 });
     setIdx((i) => (i < QUESTIONS.length - 1 ? i + 1 : i));
     if (idx >= QUESTIONS.length - 1) setPhase('result');
   }, [idx]);
@@ -24,8 +27,13 @@ export default function Quiz() {
     setIdx((i) => (i > 0 ? i - 1 : i));
   }, []);
 
+  const beginQuiz = useCallback(() => {
+    track('quiz_start');
+    setPhase('quiz');
+  }, []);
+
   if (phase === 'intro') {
-    return <Intro onBegin={() => setPhase('quiz')} />;
+    return <Intro onBegin={beginQuiz} />;
   }
 
   if (phase === 'result') {
@@ -214,6 +222,13 @@ function Result({
   onRestart: () => void;
 }) {
   const r = RESULTS[persona];
+
+  // Fire completion marker once when the result screen renders. No persona
+  // name in the event - outbound click to privdna.com is auto-tracked by
+  // Rybbit and is sufficient for funnel analysis.
+  useEffect(() => {
+    track('quiz_complete');
+  }, []);
   const shareText = encodeURIComponent(
     `I was classified "${r.stamp}" on the genome privacy dossier. What about you?`,
   );

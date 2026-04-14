@@ -1,0 +1,161 @@
+{
+  "name": "genomeprivate \u2014 Deploy on Push",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "genomeprivate-deploy",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook",
+      "name": "Gitea Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [200, 300],
+      "webhookId": "genomeprivate-deploy-v1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "auth-token-match",
+              "leftValue": "={{ $json.headers.authorization }}",
+              "rightValue": "=Bearer {{ $env.DEPLOY_WEBHOOK_TOKEN }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "auth-check",
+      "name": "Auth token valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [420, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "ref-is-main",
+              "leftValue": "={{ $json.body.ref }}",
+              "rightValue": "refs/heads/main",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "branch-filter",
+      "name": "Is main branch?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [640, 240]
+    },
+    {
+      "parameters": {
+        "command": "cd /mnt/cache/appdata/genomeprivate && git fetch origin main && git reset --hard origin/main && docker compose up -d --build 2>&1 | tail -20"
+      },
+      "id": "deploy",
+      "name": "Pull + Rebuild + Restart",
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [860, 180],
+      "credentials": {
+        "sshPassword": {
+          "id": "BqOYjyFGpTLBPokE",
+          "name": "Unraid SSH"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { deployed: true, commit: $('Gitea Webhook').item.json.body.after, stdout: $json.stdout, stderr: $json.stderr } }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "respond-ok",
+      "name": "Respond OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1080, 180]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { deployed: false, reason: 'ignored: not a push to main', ref: $('Gitea Webhook').item.json.body.ref } }}",
+        "options": {
+          "responseCode": 202
+        }
+      },
+      "id": "respond-skip",
+      "name": "Respond Skipped",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [860, 360]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { deployed: false, reason: 'unauthorized: invalid or missing bearer token' } }}",
+        "options": {
+          "responseCode": 401
+        }
+      },
+      "id": "respond-unauth",
+      "name": "Respond Unauthorized",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [640, 460]
+    }
+  ],
+  "connections": {
+    "Gitea Webhook": {
+      "main": [[{ "node": "Auth token valid?", "type": "main", "index": 0 }]]
+    },
+    "Auth token valid?": {
+      "main": [
+        [{ "node": "Is main branch?", "type": "main", "index": 0 }],
+        [{ "node": "Respond Unauthorized", "type": "main", "index": 0 }]
+      ]
+    },
+    "Is main branch?": {
+      "main": [
+        [{ "node": "Pull + Rebuild + Restart", "type": "main", "index": 0 }],
+        [{ "node": "Respond Skipped", "type": "main", "index": 0 }]
+      ]
+    },
+    "Pull + Rebuild + Restart": {
+      "main": [[{ "node": "Respond OK", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": { "executionOrder": "v1" },
+  "staticData": null,
+  "meta": {
+    "description": "Webhook-triggered redeploy of genomeprivate-web + cloudflared-genomeprivate on any push to main. Same bearer-token auth as PrivDNA deploy workflow."
+  },
+  "tags": [{ "name": "genomeprivate" }, { "name": "deploy" }]
+}

@@ -193,7 +193,7 @@ function Intro({ onBegin }: { onBegin: () => void }) {
         className="mt-28 pt-8 border-t border-ink/10 font-mono text-xs text-mute tracking-wider flex flex-wrap gap-x-6 gap-y-2 enter"
         style={{ ['--enter-delay' as string]: '0.75s' } as CSSProperties}
       >
-        <span>Rev 2026-04</span>
+        <span>&copy; 2026 GenomePrivate</span>
         <span>No cookies</span>
         <span>
           <a
@@ -207,6 +207,14 @@ function Intro({ onBegin }: { onBegin: () => void }) {
           analytics — cookieless, no PII
         </span>
         <span>Source on request</span>
+        <span>
+          <a
+            href="mailto:contact@genomeprivate.com"
+            className="hover:text-ink"
+          >
+            Contact
+          </a>
+        </span>
       </footer>
     </section>
   );

@@ -273,7 +273,18 @@ function Result({
       >
         <a
           href={`https://privdna.com/?utm_source=genomeprivate&utm_medium=quiz&utm_campaign=result_${persona}`}
-          onClick={() => track('quiz_cta_click')}
+          onClick={(e) => {
+            // Fire the event then give the Rybbit transport (beacon or
+            // fetch) a tick to leave the tab before the browser navigates
+            // away. 150ms is imperceptible and eliminates the narrow window
+            // where a non-beacon request could be cancelled mid-flight.
+            const href = e.currentTarget.href;
+            e.preventDefault();
+            track('quiz_cta_click');
+            window.setTimeout(() => {
+              window.location.href = href;
+            }, 150);
+          }}
           className="btn-ink"
         >
           {r.cta} →

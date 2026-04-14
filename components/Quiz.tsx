@@ -197,18 +197,6 @@ function Intro({ onBegin }: { onBegin: () => void }) {
         <span>No cookies</span>
         <span>
           <a
-            href="https://github.com/rybbit-io/rybbit"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-ink"
-          >
-            Rybbit
-          </a>{' '}
-          analytics — cookieless, no PII
-        </span>
-        <span>Source on request</span>
-        <span>
-          <a
             href="mailto:contact@genomeprivate.com"
             className="hover:text-ink"
           >
